@@ -1,9 +1,25 @@
+import { Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
+import Home from "./pages/Home";
+import Triage from "./pages/Triage";
+import Imaging from "./pages/Imaging";
+import RiskPrediction from "./pages/RiskPrediction";
+import Chatbot from "./pages/Chatbot";
+import Dashboard from "./pages/Dashboard";
+
 function App() {
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <h1 className="text-4xl font-bold text-white">MedIntel — Tailwind is working 🎉</h1>
-    </div>
-  )
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/triage" element={<Triage />} />
+        <Route path="/imaging" element={<Imaging />} />
+        <Route path="/risk" element={<RiskPrediction />} />
+        <Route path="/chatbot" element={<Chatbot />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Route>
+    </Routes>
+  );
 }
 
-export default App
+export default App;
