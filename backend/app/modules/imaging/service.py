@@ -9,7 +9,8 @@ from torchvision import transforms, models
 from PIL import Image
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
-from pytorch_grad_cam.utils.image import show_cam_on_image
+from pytorch_grad_cam.utils.image import show_cam_on_image 
+from app.db.database import log_imaging_event
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "..", "..", "..", "..", "models", "imaging", "pneumonia_model.pth")
@@ -74,7 +75,8 @@ def predict_with_heatmap(image_bytes: bytes) -> dict:
             f"(confidence: {conf_score*100:.1f}%). The highlighted regions show "
             f"which areas most influenced this assessment. This is a screening "
             f"aid, not a diagnosis."
-        )
+        ) 
+    log_imaging_event(predicted_class, conf_score)
 
     return {
         "prediction": predicted_class,

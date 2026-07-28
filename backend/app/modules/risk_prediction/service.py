@@ -4,7 +4,8 @@ import joblib
 import numpy as np
 import pandas as pd
 import shap
-from .priority_queue import allocate_follow_up_slots
+from .priority_queue import allocate_follow_up_slots 
+from app.db.database import log_risk_event
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, "..", "..", "..", "..", "models", "risk_prediction")
@@ -82,6 +83,7 @@ def predict_batch_with_priority(patients: list, available_slots: int) -> list:
 
     risk_level_lookup = {pid: level for pid, _, level in scored}
     for item in prioritized:
-        item["risk_level"] = risk_level_lookup[item["patient_id"]]
+        item["risk_level"] = risk_level_lookup[item["patient_id"]] 
+    log_risk_event(patient_dict.get("patient_id", "unknown"), risk_score, risk_level)
 
     return prioritized

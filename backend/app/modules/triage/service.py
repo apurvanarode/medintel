@@ -2,7 +2,8 @@ import os
 import json
 import google.generativeai as genai
 from dotenv import load_dotenv
-from .red_flags import check_red_flags
+from .red_flags import check_red_flags 
+from app.db.database import log_triage_event
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -69,6 +70,8 @@ def run_triage(conversation: list) -> dict:
         parsed["red_flag_reason"] = reason
     else:
         parsed["red_flag_triggered"] = False
-        parsed["red_flag_reason"] = None
+        parsed["red_flag_reason"] = None 
+    if not parsed.get("needs_more_info"):
+        log_triage_event(parsed.get("urgency_level"), parsed.get("red_flag_triggered", False))
 
     return parsed
