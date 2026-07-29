@@ -4,8 +4,6 @@ venv/
 .env
 data/raw/
 data/processed/
-models/*/*.pth
-models/*/*.pt
 *.db
 .DS_Store
 node_modules/
