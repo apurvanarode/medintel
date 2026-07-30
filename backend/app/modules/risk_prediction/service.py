@@ -4,14 +4,11 @@ import joblib
 import numpy as np
 import pandas as pd
 import shap
-from .priority_queue import allocate_follow_up_slots 
+from .priority_queue import allocate_follow_up_slots
 from app.db.database import log_risk_event
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, "..", "..", "..", "..", "models", "risk_prediction")
-
-model = joblib.load(os.path.join(MODELS_DIR, "risk_model.pkl"))
-encoders = joblib.load(os.path.join(MODELS_DIR, "encoders.pkl"))
 
 with open(os.path.join(MODELS_DIR, "feature_cols.json")) as f:
     feature_cols = json.load(f)
@@ -19,10 +16,21 @@ with open(os.path.join(MODELS_DIR, "feature_cols.json")) as f:
 with open(os.path.join(MODELS_DIR, "medians.json")) as f:
     medians = json.load(f)
 
-explainer = shap.TreeExplainer(model)
+# --- Lazy-loaded model, encoders, and SHAP explainer ---
+_model = None
+_encoders = None
+_explainer = None
+
+def _load_model():
+    global _model, _encoders, _explainer
+    if _model is None:
+        _model = joblib.load(os.path.join(MODELS_DIR, "risk_model.pkl"))
+        _encoders = joblib.load(os.path.join(MODELS_DIR, "encoders.pkl"))
+        _explainer = shap.TreeExplainer(_model)
+    return _model, _encoders, _explainer
 
 
-def _prepare_row(patient_dict: dict) -> pd.DataFrame:
+def _prepare_row(patient_dict: dict, encoders: dict) -> pd.DataFrame:
     row = {}
     for col in feature_cols:
         raw_value = patient_dict.get(col)
@@ -38,7 +46,9 @@ def _prepare_row(patient_dict: dict) -> pd.DataFrame:
 
 
 def predict_risk(patient_dict: dict) -> dict:
-    X_row = _prepare_row(patient_dict)
+    model, encoders, explainer = _load_model()
+
+    X_row = _prepare_row(patient_dict, encoders)
     risk_score = float(model.predict_proba(X_row)[0][1])
 
     if risk_score >= 0.5:
@@ -50,7 +60,7 @@ def predict_risk(patient_dict: dict) -> dict:
 
     shap_values = explainer.shap_values(X_row)
     if isinstance(shap_values, list):
-        shap_values = shap_values[1]  # class 1 (readmitted)
+        shap_values = shap_values[1]
 
     contributions = shap_values[0]
     feature_impact = list(zip(feature_cols, contributions))
@@ -64,6 +74,8 @@ def predict_risk(patient_dict: dict) -> dict:
             "impact": round(float(impact), 4),
             "value": str(raw_value),
         })
+
+    log_risk_event(patient_dict.get("patient_id", "unknown"), risk_score, risk_level)
 
     return {
         "risk_score": round(risk_score, 4),
@@ -83,7 +95,6 @@ def predict_batch_with_priority(patients: list, available_slots: int) -> list:
 
     risk_level_lookup = {pid: level for pid, _, level in scored}
     for item in prioritized:
-        item["risk_level"] = risk_level_lookup[item["patient_id"]] 
-    log_risk_event(patient_dict.get("patient_id", "unknown"), risk_score, risk_level)
+        item["risk_level"] = risk_level_lookup[item["patient_id"]]
 
     return prioritized
