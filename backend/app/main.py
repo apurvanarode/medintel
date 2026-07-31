@@ -7,7 +7,12 @@ torch.set_num_threads(1)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.modules.triage.router import router as triage_router
-from app.modules.imaging.router import router as imaging_router
+import os
+
+ENABLE_IMAGING = os.getenv("ENABLE_IMAGING", "true").lower() == "true"
+
+if ENABLE_IMAGING:
+    from app.modules.imaging.router import router as imaging_router
 from app.modules.risk_prediction.router import router as risk_router 
 from app.modules.chatbot.router import router as chatbot_router 
 from app.modules.dashboard_api.router import router as dashboard_router
@@ -27,7 +32,8 @@ app.add_middleware(
 )
 
 app.include_router(triage_router)
-app.include_router(imaging_router)
+if ENABLE_IMAGING:
+    app.include_router(imaging_router)
 app.include_router(risk_router) 
 app.include_router(chatbot_router) 
 app.include_router(dashboard_router)
