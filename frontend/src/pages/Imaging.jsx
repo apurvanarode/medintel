@@ -31,7 +31,13 @@ export default function Imaging() {
       });
       setResult(response.data);
     } catch (err) {
-      setError("Something went wrong analyzing this image. Please try again.");
+      if (err.response?.status === 404) {
+        setError(
+          "This module is disabled on the live demo due to free-tier hosting memory limits. It runs fully locally — see the demo video in the README for a live walkthrough."
+        );
+      } else {
+        setError("Something went wrong analyzing this image. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -103,7 +109,12 @@ export default function Imaging() {
               </button>
             </div>
 
-            {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
+            {error && (
+                <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-amber-800 leading-relaxed">{error}</p>
+                </div>
+            )}
 
             <AnimatePresence>
               {result && (
