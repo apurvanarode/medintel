@@ -7,7 +7,19 @@ generative AI, explainability, and system design.
 
 ## Demo
 
-*(Add a screen recording or GIF here showing all 5 modules)*
+- **App**: https://medintel-two.vercel.app
+- **Backend API docs**: https://medintel-backend-p6ct.onrender.com/docs
+
+**Note:** The Imaging Diagnosis module is disabled on this live deployment due to free-tier 
+hosting memory constraints (512MB RAM) — loading a CV model alongside the other ML models 
+in the same process exceeds this limit. The module is fully functional when run locally 
+(see setup instructions below) and is demonstrated in the demo video. This was a deliberate, 
+documented tradeoff — see `docs/system_design.md` for the full reasoning and the memory 
+optimization work that went into getting the rest of the platform running reliably on 
+free-tier infrastructure.
+
+Backend is hosted on Render's free tier, which spins down after ~15 minutes of inactivity — 
+the first request may take 30-60 seconds while the server restarts.
 
 ## The Problem
 
